@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<state
+	name="Arena_State_Game" 
+	serverentity="true"
+>
+	<oninflict>
+		<!-- Spawn the Scoretracker and set it to 0 (tied) -->
+		<!-- It only tracks who is in the lead, 			-->
+		<!-- not how many points each team has scored	 	-->
+		<spawnunit name="Arena_ScoreTracker" pushentity="true"/>
+		<setproxy entity="this_entity" target="stack_entity" />
+		<setaccumulator entity="stack_entity" value="0" />
+	</oninflict>
+	
+	<onframe>	
+		<setaccumulator value="0" />
+		<areaofeffect targetscheme="all_heroes" global="true" targetselection="all" ignoreinvulnerable="true"> <!-- Find All Heroes -->
+			<compare source="target_entity" a="source_team" b="1" op="eq"> <!-- Is Legion -->
+				<changeaccumulator b="1" op="add" />
+			</compare>
+			<else>
+				<compare source="target_entity" a="source_team" b="2" op="eq"> <!-- Is Hellbourne -->
+					<changeaccumulator b="-1" op="add" />
+				</compare>
+			</else>
+		</areaofeffect>
+		<setvar0 a="result"/> <!-- Number of Heroes found -->
+		
+		<compare a="var0" b="0" op="gt"> <!-- Number of Heroes must be more than 0, else noone is alive (read our conditions!) -->
+			<compare a="accumulator" b="var0" op="eq"> <!-- Legion team adds to accumulator, if accumulator = number of heroes then only legion is alive -->
+				<!-- Legion Wins Round -->
+				<areaofeffect targetscheme="all_heroes" global="true" targetselection="all" ignoreinvulnerable="true">
+					<kill />
+				</areaofeffect>
+				<changeaccumulator entity="proxy_entity" b="1" op="add" />
+				<!-- New Round Starting -->
+				<foreachplayer>
+					<pushhero/>
+					<applystate name="Arena_State_Respawn" target="stack_entity"/>
+				</foreachplayer>
+			</compare>
+			<else>
+				<changeaccumulator b="-1" op="mult"/>
+				<compare a="accumulator" b="var0" op="eq"> <!-- Hellbourne decreases accumulator, if accumulator * -1 = number of heroes only hellbourne is alive -->
+					<!-- Hellbourne Wins Round -->
+					<areaofeffect targetscheme="all_heroes" global="true" targetselection="all" ignoreinvulnerable="true">
+						<kill />
+					</areaofeffect>
+					
+					<changeaccumulator entity="proxy_entity" b="-1" op="add" />
+					<!-- New Round Starting -->
+					<foreachplayer>
+						<pushhero/>
+						<applystate name="Arena_State_Respawn" target="stack_entity"/>
+					</foreachplayer>
+				</compare>
+			</else>
+		</compare>
+		<else>
+			<compare a="var0" b="0" op="le">
+				<!-- Noone (or negative) alive. No winner and round needs to be restarted! -->
+				<areaofeffect targetscheme="all_heroes" global="true" targetselection="all" ignoreinvulnerable="true">
+					<kill />
+				</areaofeffect>
+				<!-- New Round Starting -->
+				<foreachplayer>
+					<pushhero/>
+					<applystate name="Arena_State_Respawn" target="stack_entity"/>
+				</foreachplayer>
+			</compare>
+		</else>
+	</onframe>
+</state>

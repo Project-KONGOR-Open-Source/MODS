@@ -1,0 +1,5 @@
+v0.0.1 - 30 September 2020
+- create initial version of the mod
+
+v0.0.2 - 01 October 2020
+- change icon
